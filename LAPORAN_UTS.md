@@ -221,7 +221,7 @@ Penulisan laporan ini mengadopsi standar penulisan teknis **Prinsip ABC**:
 ## BAB VI: PENGGUNAAN TOOLS GITHUB DAN SHARING REPOSITORY (BOBOT 15%)
 
 ### 6.1 Tautan Repositori GitHub
-* **URL GitHub Repository:** `[Masukkan URL Repository GitHub Anda di sini]`
+* **URL GitHub Repository:** `https://github.com/Kihatosi/uts-rpl-lanjut-bpmn`
 * **Branch Utama:** `main`
 
 ### 6.2 Konfigurasi Akses Kolaborator Dosen

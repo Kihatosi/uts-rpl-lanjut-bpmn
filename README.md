@@ -213,9 +213,8 @@ git commit -m "feat: complete UTS RPL Lanjut - Spring Boot Camunda BPMN Leave Re
 1. Buka [GitHub.com](https://github.com) dan buat repository baru bernama `uts-rpl-lanjut-bpmn-springboot` (pilih opsi *Public* atau *Private*).
 2. Hubungkan repositori lokal ke GitHub:
 ```powershell
-# Ganti URL_REPOSITORY_ANDA dengan URL repo github Anda
 git branch -M main
-git remote add origin https://github.com/USERNAME_ANDA/uts-rpl-lanjut-bpmn-springboot.git
+git remote add origin https://github.com/Kihatosi/uts-rpl-lanjut-bpmn.git
 git push -u origin main
 ```
 
