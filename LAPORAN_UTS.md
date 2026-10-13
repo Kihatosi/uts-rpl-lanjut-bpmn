@@ -15,32 +15,33 @@ Pemodelan & Implementasi BPM/BPMN pakai Spring Boot dan Camunda BPM
 
 ---
 
-## BAB I: Penjelasan 5W (Bobot 10%)
+## BAB I: Penjelasan 5W 
 
 ### 1.1 Spring / Spring Boot
 
-- **What:** Spring Boot itu framework Java buat bikin aplikasi enterprise yang bisa langsung jalan tanpa ribet konfigurasi. Ada fitur auto-configuration, dependency injection, dan embedded web server (Tomcat/Jetty), jadi ga perlu setup server terpisah.
-- **Why:** Dulu konfigurasi J2EE itu panjang banget, banyak file XML. Spring Boot ngilangin semua itu dan bikin development jadi lebih cepat.
-- **Who:** Dibuat sama Pivotal (sekarang bagian Broadcom/VMware), dipake sama banyak developer enterprise.
-- **Where:** Banyak dipake buat microservices, REST API backend, payment gateway, dan sistem informasi perusahaan.
-- **When:** Cocok kalau butuh backend yang modular, scalable, dan gampang di-test.
+- **What:** Framework Java open source untuk membangun aplikasi enterprise dan microservices yang berjalan mandiri (stand-alone) dengan konfigurasi minimal. Menyediakan Dependency Injection (DI), Inversion of Control (IoC), dan Auto-Configuration.
+- **Why:** Mengurangi kode boilerplate dan konfigurasi J2EE tradisional yang berbasis XML. Auto-configuration dan embedded servlet container (Tomcat) membuat aplikasi bisa langsung dijalankan.
+- **Who:**Dikembangkan oleh Pivotal Team (sekarang VMware/Broadcom). Penggunanya software engineer dan Java developer yang membangun solusi enterprise.
+- **Where:** Sisi backend, mulai dari aplikasi web monolitik sampai arsitektur microservices terdistribusi dan cloud-native.
+- **When:** Saat tim membutuhkan Rapid Application Development (RAD) agar bisa fokus pada logika bisnis, bukan konfigurasi infrastruktur.
 
 ### 1.2 BPM & BPMN
 
-- **What:** BPM itu cara buat memodelkan dan ngotomasi proses bisnis. Standar visualnya BPMN 2.0, dikelola sama OMG (Object Management Group).
-- **Why:** Dengan BPM, logika bisnis dipisah dari kode program. Jadi kalau aturannya berubah, tinggal edit diagramnya aja, ga perlu bongkar kode.
-- **Who:** Dipake bareng-bareng sama Business Analyst, System Analyst, dan Developer.
-- **Where:** Jalan di process engine kayak Camunda, Flowable, atau Activiti.
-- **When:** Dipake kalau sistemnya punya banyak tahapan, ada approval manusia, batas waktu SLA, atau perlu audit trail.
+- **What:** BPM adalah metodologi untuk mengelola, mengotomatisasi, dan mengoptimalkan proses bisnis. BPMN 2.0 adalah standar internasional untuk memodelkan alur kerja bisnis secara grafis, dan modelnya bisa langsung dieksekusi oleh engine (executable flowchart).
+- **Why:** Menjembatani komunikasi antara analis bisnis yang merancang alur kebutuhan dan developer yang mengimplementasikannya dalam kode.
+- **Who:** Dirancang oleh business analyst atau system analyst, lalu diimplementasikan software engineer dengan process engine seperti Camunda.
+- **Where:** Sistem enterprise dengan workflow multi-langkah, misalnya approval berjenjang, routing dokumen, dan orkestrasi transaksi antarsistem.
+- **When:** Saat aturan proses sering berubah, perlu pelacakan (audit tracking) real-time, dan melibatkan banyak pihak, baik manusia maupun sistem otomatis.
 
 ### 1.3 Keterkaitan keduanya di J2EE
 
-Di arsitektur J2EE modern, Spring Boot dan BPM saling melengkapi:
+Pada pemrograman J2EE/Spring tradisional, alur bisnis yang rumit sering berakhir sebagai spaghetti code: banyak percabangan IF/ELSE manual dan manipulasi status langsung di database. Dengan Camunda BPM 7.22 yang diintegrasikan ke Spring Boot, ada empat manfaat:
 
-1. BPM ngatur alur proses (urutan langkah, gateway keputusan, SLA). Spring Boot ngurus implementasi teknisnya (akses database, keamanan, integrasi API).
-2. J2EE biasa itu stateless (request-response aja). Dengan BPM, tugas yang butuh nunggu manusia approve (User Task) bisa disimpan state-nya otomatis.
-3. Proses yang lagi jalan bisa dipantau lewat Camunda Cockpit tanpa perlu bikin query logging sendiri.
-4. Camunda terhubung sama Spring Transaction Management, jadi kalau satu tahap gagal, bisa di-rollback.
+1.	Separation of concerns. Routing status, gateway keputusan, timer, dan eskalasi ditangani file model BPMN, sedangkan Spring Boot hanya menjalankan tugas teknis lewat Java Delegate (Spring Bean).
+2.	Human-in-the-loop. User Task tersimpan persisten tanpa kehilangan state dan bisa dikerjakan lewat Camunda Tasklist atau portal web buatan sendiri.
+3.	Visibilitas real-time. Posisi token setiap instance proses bisa dipantau di Camunda Cockpit, sehingga audit dan troubleshooting tidak perlu bergantung pada log manual.
+4.	Transaksi ACID. Camunda terhubung dengan TransactionManager Spring Boot, sehingga data tetap konsisten kalau terjadi error di tengah proses.
+
 
 ---
 
