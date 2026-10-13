@@ -200,7 +200,6 @@ Alasan Penolakan    : Ditolak: Beban kuartal akhir sangat tinggi
 ### 4.2 Screenshot & Video
 
 - Screenshot ada di folder `docs/screenshots/` atau dilampirin di laporan PDF.
-- Link rekaman video: `[Masukkan link video di sini]`
 
 ---
 
