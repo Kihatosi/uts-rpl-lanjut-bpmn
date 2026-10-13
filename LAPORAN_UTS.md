@@ -10,8 +10,8 @@
 * **Program Studi:** Teknik Informatika
 * **Fakultas:** Sains dan Teknologi, UIN Syarif Hidayatullah Jakarta
 * **Semester / Tahun Akademik:** Semester 5 / 2026-2027
-* **Nama Mahasiswa:** [Ahmad Rusmi / Masukkan Nama Anda]
-* **NIM:** [Masukkan NIM Anda]
+* **Nama Mahasiswa:** Rusmin Nuryadin
+* **NIM:** 12409011050120
 
 ---
 
