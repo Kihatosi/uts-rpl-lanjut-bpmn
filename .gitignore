@@ -1,0 +1,23 @@
+# Maven & Build artifacts
+target/
+**/target/
+build/
+**/build/
+*.class
+
+# IDE configurations
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Maven Wrapper JAR
+.mvn/wrapper/maven-wrapper.jar
+**/maven-wrapper.jar
+
+# Logs & Temp files
+*.log
+scratch/
+.DS_Store
+Thumbs.db

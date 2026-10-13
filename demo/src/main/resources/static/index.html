@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UTS RPL Lanjut - Sistem Pengajuan Cuti (Camunda BPMN & Spring Boot)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #0ea5e9;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-primary { background: rgba(79, 70, 229, 0.25); color: #a5b4fc; border: 1px solid #6366f1; }
+    .badge-success { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid #10b981; }
+    .badge-warning { background: rgba(245, 158, 11, 0.25); color: #fcd34d; border: 1px solid #f59e0b; }
+
+    header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Quick Links Bar */
+    .links-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .link-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: #e2e8f0;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .link-btn:hover {
+      background: #334155;
+      border-color: var(--primary);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    /* Grid Layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .preset-btns {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .btn-preset {
+      background: #334155;
+      color: #e2e8f0;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-preset:hover {
+      background: #475569;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Process Flow Diagram Card */
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      padding: 12px 14px;
+      border-radius: 8px;
+    }
+
+    .step-num {
+      background: var(--primary);
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Pending Tasks */
+    .task-item {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-approve {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-approve:hover { background: #059669; }
+
+    .btn-reject {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-reject:hover { background: #dc2626; }
+
+    /* History Table */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: #0f172a;
+      text-align: left;
+      padding: 12px 14px;
+      color: #94a3b8;
+      font-weight: 600;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1e293b;
+      color: #e2e8f0;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+    .status-rejected { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+
+    /* Alert / Notification toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 10px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Header -->
+    <header>
+      <div class="badge-bar">
+        <span class="badge badge-primary">UTS Rekayasa Perangkat Lunak Lanjut</span>
+        <span class="badge badge-success">Spring Boot 3.3.6 + Camunda BPMN 7.22</span>
+        <span class="badge badge-warning">Dosen: Pak Rizal Broer, M.Kom</span>
+      </div>
+      <h1>Sistem Pengajuan Cuti Karyawan (BPMN Workflow)</h1>
+      <p>Demonstrasi integrasi Model Bisnis BPMN 2.0 dengan Java J2EE / Jakarta Framework menggunakan Spring Boot & Camunda Process Engine.</p>
+    </header>
+
+    <!-- Quick Navigation Links -->
+    <div class="links-bar">
+      <a href="/camunda/app/cockpit/default/" target="_blank" class="link-btn">
+        <span>📊</span> <strong>Camunda Cockpit</strong>
+      </a>
+      <a href="/camunda/app/tasklist/default/" target="_blank" class="link-btn">
+        <span>📋</span> <strong>Camunda Tasklist</strong>
+      </a>
+      <a href="/test-hello" target="_blank" class="link-btn">
+        <span>🧪</span> <strong>Test Hello World API</strong>
+      </a>
+      <a href="/h2-console" target="_blank" class="link-btn">
+        <span>🗄️</span> <strong>H2 Database Console</strong>
+      </a>
+    </div>
+
+    <!-- Main Grid: Form + Process Explanation -->
+    <div class="main-grid">
+      
+      <!-- Card Form Pengajuan -->
+      <div class="card">
+        <div class="card-title">
+          <span>📝</span> Form Pengajuan Cuti (Start Event)
+        </div>
+
+        <div class="preset-btns">
+          <button type="button" class="btn-preset" onclick="fillPreset(1, 'Ahmad Rusmi', 'IT Support', 'Keperluan berkas kuliah')">⚡ Cuti 1 Hari (Auto-Approve)</button>
+          <button type="button" class="btn-preset" onclick="fillPreset(4, 'Siti Rahma', 'Keuangan', 'Liburan keluarga keluar kota')">⚡ Cuti 4 Hari (Review Manajer)</button>
+        </div>
+
+        <form id="cutiForm" onsubmit="submitCuti(event)">
+          <div class="form-group">
+            <label for="namaKaryawan">Nama Karyawan</label>
+            <input type="text" id="namaKaryawan" required placeholder="Contoh: Ahmad Rusmi">
+          </div>
+
+          <div class="form-group">
+            <label for="departemen">Departemen / Divisi</label>
+            <select id="departemen">
+              <option value="IT Engineering">IT Engineering</option>
+              <option value="Finance & Accounting">Finance & Accounting</option>
+              <option value="Human Resources">Human Resources</option>
+              <option value="Marketing">Marketing</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="jumlahHari">Jumlah Hari Cuti</label>
+            <input type="number" id="jumlahHari" min="1" max="30" value="1" required>
+            <small style="color: var(--text-muted); font-size: 11px;">*Aturan: Cuti &le; 2 hari otomatis disetujui sistem; Cuti &gt; 2 hari butuh review Manajer.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="alasan">Alasan Pengajuan Cuti</label>
+            <textarea id="alasan" rows="3" required placeholder="Jelaskan alasan pengajuan cuti..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit">🚀 Ajukan Permohonan Cuti</button>
+        </form>
+      </div>
+
+      <!-- Card Alur BPMN & Aturan Bisnis -->
+      <div class="card">
+        <div class="card-title">
+          <span>🔄</span> Alur Proses Bisnis BPMN 2.0
+        </div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div>
+              <strong>Start Event: Pengajuan Cuti Diajukan</strong>
+              <div style="color: var(--text-muted);">Karyawan mengisi data permohonan melalui form web atau REST API.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div>
+              <strong>Service Task: Validasi & Cek Aturan Bisnis</strong>
+              <div style="color: var(--text-muted);">Spring Bean (<code>ValidasiCutiDelegate</code>) memeriksa durasi cuti secara otomatis.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div>
+              <strong>Exclusive Gateway (XOR): Evaluasi Syarat</strong>
+              <div style="color: var(--text-muted);">&bull; Jika &le; 2 Hari &rarr; <em>Auto-Approve</em> langsung ke notifikasi.<br>&bull; Jika &gt; 2 Hari &rarr; Diteruskan ke <em>User Task</em> Manajer.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">4</div>
+            <div>
+              <strong>User Task: Persetujuan Manajer</strong>
+              <div style="color: var(--text-muted);">Manajer dapat menyetujui atau menolak permohonan melalui Camunda Tasklist atau Web UI ini.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">5</div>
+            <div>
+              <strong>Service Task & End Event: Notifikasi & Selesai</strong>
+              <div style="color: var(--text-muted);">Mengeksekusi <code>NotifikasiDisetujuiDelegate</code> atau <code>NotifikasiDitolakDelegate</code> dan menyimpan status akhir.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Panel Persetujuan Manajer (User Task) -->
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="card-title">
+        <span>⏳</span> Persetujuan Cuti oleh Manajer (User Task: Active Tasks)
+        <button onclick="loadPendingTasks()" style="margin-left: auto; background: #334155; color: #fff; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">🔄 Refresh Tasks</button>
+      </div>
+      <div id="taskListContainer">
+        <p style="color: var(--text-muted); font-size: 13px;">Memuat data tugas...</p>
+      </div>
+    </div>
+
+    <!-- Riwayat Pengajuan (History) -->
+    <div class="card">
+      <div class="card-title">
+        <span>📊</span> Riwayat & Status Proses Pengajuan (Camunda History Service)
+        <button onclick="loadHistory()" style="margin-left: auto; background: #334155; color: #fff; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">🔄 Refresh History</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Proses</th>
+              <th>Nama Karyawan</th>
+              <th>Departemen</th>
+              <th>Durasi</th>
+              <th>Alasan</th>
+              <th>Status Akhir</th>
+              <th>Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Memuat riwayat proses...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast"></div>
+
+  <script>
+    // Show toast message
+    function showToast(msg, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.style.borderColor = isSuccess ? '#10b981' : '#ef4444';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    // Form preset helper
+    function fillPreset(hari, nama, dept, alasan) {
+      document.getElementById('namaKaryawan').value = nama;
+      document.getElementById('departemen').value = dept;
+      document.getElementById('jumlahHari').value = hari;
+      document.getElementById('alasan').value = alasan;
+    }
+
+    // Submit Cuti
+    async function submitCuti(event) {
+      event.preventDefault();
+      const payload = {
+        namaKaryawan: document.getElementById('namaKaryawan').value,
+        departemen: document.getElementById('departemen').value,
+        jumlahHari: parseInt(document.getElementById('jumlahHari').value),
+        alasan: document.getElementById('alasan').value
+      };
+
+      try {
+        const res = await fetch('/api/cuti/ajukan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        showToast(data.pesan, true);
+        document.getElementById('cutiForm').reset();
+        loadPendingTasks();
+        loadHistory();
+      } catch (err) {
+        showToast('Gagal mengajukan cuti: ' + err.message, false);
+      }
+    }
+
+    // Load Pending User Tasks
+    async function loadPendingTasks() {
+      const container = document.getElementById('taskListContainer');
+      try {
+        const res = await fetch('/api/cuti/tasks');
+        const tasks = await res.json();
+
+        if (tasks.length === 0) {
+          container.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">Tidak ada permohonan yang menunggu persetujuan Manajer saat ini. ✅</p>';
+          return;
+        }
+
+        let html = '';
+        tasks.forEach(t => {
+          html += `
+            <div class="task-item">
+              <div class="task-header">
+                <strong>👤 ${t.namaKaryawan} (${t.departemen}) &mdash; Memohon Cuti ${t.jumlahHari} Hari</strong>
+                <span class="badge badge-warning">Task ID: ${t.taskId}</span>
+              </div>
+              <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 6px;">
+                <strong>Alasan:</strong> "${t.alasan}"
+              </p>
+              <div style="font-size: 12px; color: var(--text-muted);">
+                Proses ID: <code>${t.processInstanceId}</code> | Assignee: <code>${t.assignee || 'demo'}</code>
+              </div>
+              <div class="task-actions">
+                <button class="btn-approve" onclick="reviewTask('${t.taskId}', true)">✅ Setujui Cuti</button>
+                <button class="btn-reject" onclick="reviewTask('${t.taskId}', false)">❌ Tolak Cuti</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<p style="color: #ef4444; font-size: 13px;">Gagal mengambil tasks: ${err.message}</p>`;
+      }
+    }
+
+    // Review Task (Approve / Reject)
+    async function reviewTask(taskId, isApproved) {
+      const catatan = prompt(
+        isApproved ? 'Masukkan catatan persetujuan (opsional):' : 'Masukkan alasan penolakan:',
+        isApproved ? 'Disetujui oleh Manajer, selamat berlibur.' : 'Ditolak: pekerjaan sedang dalam masa rilis kritis.'
+      );
+      if (catatan === null) return;
+
+      try {
+        const res = await fetch(`/api/cuti/tasks/${taskId}/review`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ disetujui: isApproved, catatanReview: catatan })
+        });
+        const data = await res.json();
+        showToast(data.pesan, isApproved);
+        loadPendingTasks();
+        loadHistory();
+      } catch (err) {
+        showToast('Gagal memproses task: ' + err.message, false);
+      }
+    }
+
+    // Load History
+    async function loadHistory() {
+      const tbody = document.getElementById('historyTableBody');
+      try {
+        const res = await fetch('/api/cuti/history');
+        const history = await res.json();
+
+        if (history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Belum ada riwayat pengajuan cuti.</td></tr>';
+          return;
+        }
+
+        let html = '';
+        history.forEach(h => {
+          let badgeClass = 'status-pending';
+          if (h.statusAkhir === 'DISETUJUI') badgeClass = 'status-approved';
+          else if (h.statusAkhir === 'DITOLAK') badgeClass = 'status-rejected';
+
+          html += `
+            <tr>
+              <td><code>${h.processInstanceId ? h.processInstanceId.substring(0, 8) + '...' : '-'}</code></td>
+              <td><strong>${h.namaKaryawan || '-'}</strong></td>
+              <td>${h.departemen || '-'}</td>
+              <td>${h.jumlahHari ? h.jumlahHari + ' Hari' : '-'}</td>
+              <td>${h.alasan || '-'}</td>
+              <td><span class="status-badge ${badgeClass}">${h.statusAkhir || 'PROSES'}</span></td>
+              <td>${h.catatanReview || '-'}</td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444;">Gagal memuat riwayat: ${err.message}</td></tr>`;
+      }
+    }
+
+    // Initial load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadPendingTasks();
+      loadHistory();
+    });
+  </script>
+</body>
+</html>

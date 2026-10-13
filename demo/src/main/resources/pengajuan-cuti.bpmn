@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_PengajuanCuti"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  
+  <bpmn:process id="pengajuanCutiProcess" name="Proses Pengajuan Cuti Karyawan" isExecutable="true"
+                camunda:historyTimeToLive="180">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_Pengajuan" name="Pengajuan Cuti Diajukan">
+      <bpmn:outgoing>Flow_Start_Validasi</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:sequenceFlow id="Flow_Start_Validasi" sourceRef="StartEvent_Pengajuan" targetRef="Task_Validasi" />
+
+    <!-- Service Task 1: Validasi dan Aturan Bisnis -->
+    <bpmn:serviceTask id="Task_Validasi" name="Validasi &amp; Cek Syarat Cuti"
+                      camunda:delegateExpression="${validasiCutiDelegate}">
+      <bpmn:incoming>Flow_Start_Validasi</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validasi_GatewayCek</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_Validasi_GatewayCek" sourceRef="Task_Validasi" targetRef="Gateway_CekHari" />
+
+    <!-- Exclusive Gateway: Cek apakah perlu persetujuan manajer -->
+    <bpmn:exclusiveGateway id="Gateway_CekHari" name="Apakah Cuti &gt; 2 Hari?">
+      <bpmn:incoming>Flow_Validasi_GatewayCek</bpmn:incoming>
+      <bpmn:outgoing>Flow_AutoApprove</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PerluReview</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Jalur 1: Cuti <= 2 hari -> Auto-Approved -->
+    <bpmn:sequenceFlow id="Flow_AutoApprove" name="Tidak (&lt;= 2 Hari)" sourceRef="Gateway_CekHari" targetRef="Task_NotifikasiDisetujui">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${perluPersetujuanManajer == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- Jalur 2: Cuti > 2 hari -> User Task Review Manajer -->
+    <bpmn:sequenceFlow id="Flow_PerluReview" name="Ya (&gt; 2 Hari)" sourceRef="Gateway_CekHari" targetRef="Task_ReviewManajer">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${perluPersetujuanManajer == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- User Task: Review & Approval oleh Manajer -->
+    <bpmn:userTask id="Task_ReviewManajer" name="Persetujuan Cuti oleh Manajer"
+                   camunda:candidateGroups="management"
+                   camunda:assignee="demo">
+      <bpmn:incoming>Flow_PerluReview</bpmn:incoming>
+      <bpmn:outgoing>Flow_Review_GatewayKeputusan</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="Flow_Review_GatewayKeputusan" sourceRef="Task_ReviewManajer" targetRef="Gateway_Keputusan" />
+
+    <!-- Exclusive Gateway: Hasil Keputusan Manajer -->
+    <bpmn:exclusiveGateway id="Gateway_Keputusan" name="Keputusan Manajer?">
+      <bpmn:incoming>Flow_Review_GatewayKeputusan</bpmn:incoming>
+      <bpmn:outgoing>Flow_Disetujui</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Ditolak</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Jalur Disetujui -->
+    <bpmn:sequenceFlow id="Flow_Disetujui" name="Disetujui" sourceRef="Gateway_Keputusan" targetRef="Task_NotifikasiDisetujui">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${disetujui == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- Jalur Ditolak -->
+    <bpmn:sequenceFlow id="Flow_Ditolak" name="Ditolak" sourceRef="Gateway_Keputusan" targetRef="Task_NotifikasiDitolak">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${disetujui == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- Service Task 2A: Kirim Notifikasi Disetujui -->
+    <bpmn:serviceTask id="Task_NotifikasiDisetujui" name="Kirim Notifikasi Cuti Disetujui"
+                      camunda:delegateExpression="${notifikasiDisetujuiDelegate}">
+      <bpmn:incoming>Flow_AutoApprove</bpmn:incoming>
+      <bpmn:incoming>Flow_Disetujui</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifSetuju_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_NotifSetuju_End" sourceRef="Task_NotifikasiDisetujui" targetRef="EndEvent_Disetujui" />
+
+    <bpmn:endEvent id="EndEvent_Disetujui" name="Cuti Disetujui">
+      <bpmn:incoming>Flow_NotifSetuju_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Service Task 2B: Kirim Notifikasi Ditolak -->
+    <bpmn:serviceTask id="Task_NotifikasiDitolak" name="Kirim Notifikasi Cuti Ditolak"
+                      camunda:delegateExpression="${notifikasiDitolakDelegate}">
+      <bpmn:incoming>Flow_Ditolak</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifTolak_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_NotifTolak_End" sourceRef="Task_NotifikasiDitolak" targetRef="EndEvent_Ditolak" />
+
+    <bpmn:endEvent id="EndEvent_Ditolak" name="Cuti Ditolak">
+      <bpmn:incoming>Flow_NotifTolak_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+  </bpmn:process>
+
+  <!-- Diagram Visual Coordinates -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_PengajuanCuti">
+    <bpmndi:BPMNPlane id="BPMNPlane_PengajuanCuti" bpmnElement="pengajuanCutiProcess">
+      
+      <!-- Start Event -->
+      <bpmndi:BPMNShape id="StartEvent_Pengajuan_di" bpmnElement="StartEvent_Pengajuan">
+        <dc:Bounds x="152" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="133" y="235" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Task Validasi -->
+      <bpmndi:BPMNShape id="Task_Validasi_di" bpmnElement="Task_Validasi">
+        <dc:Bounds x="240" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Gateway Cek Hari -->
+      <bpmndi:BPMNShape id="Gateway_CekHari_di" bpmnElement="Gateway_CekHari" isMarkerVisible="true">
+        <dc:Bounds x="415" y="185" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="403" y="155" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Task Review Manajer -->
+      <bpmndi:BPMNShape id="Task_ReviewManajer_di" bpmnElement="Task_ReviewManajer">
+        <dc:Bounds x="520" y="170" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Gateway Keputusan -->
+      <bpmndi:BPMNShape id="Gateway_Keputusan_di" bpmnElement="Gateway_Keputusan" isMarkerVisible="true">
+        <dc:Bounds x="705" y="185" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="701" y="155" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Task Notifikasi Disetujui -->
+      <bpmndi:BPMNShape id="Task_NotifikasiDisetujui_di" bpmnElement="Task_NotifikasiDisetujui">
+        <dc:Bounds x="820" y="170" width="140" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- End Disetujui -->
+      <bpmndi:BPMNShape id="EndEvent_Disetujui_di" bpmnElement="EndEvent_Disetujui">
+        <dc:Bounds x="1022" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1006" y="235" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Task Notifikasi Ditolak -->
+      <bpmndi:BPMNShape id="Task_NotifikasiDitolak_di" bpmnElement="Task_NotifikasiDitolak">
+        <dc:Bounds x="820" y="300" width="140" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- End Ditolak -->
+      <bpmndi:BPMNShape id="EndEvent_Ditolak_di" bpmnElement="EndEvent_Ditolak">
+        <dc:Bounds x="1022" y="322" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1011" y="365" width="59" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="Flow_Start_Validasi_di" bpmnElement="Flow_Start_Validasi">
+        <di:waypoint x="188" y="210" />
+        <di:waypoint x="240" y="210" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Validasi_GatewayCek_di" bpmnElement="Flow_Validasi_GatewayCek">
+        <di:waypoint x="360" y="210" />
+        <di:waypoint x="415" y="210" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_AutoApprove_di" bpmnElement="Flow_AutoApprove">
+        <di:waypoint x="440" y="235" />
+        <di:waypoint x="440" y="110" />
+        <di:waypoint x="890" y="110" />
+        <di:waypoint x="890" y="170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="448" y="123" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_PerluReview_di" bpmnElement="Flow_PerluReview">
+        <di:waypoint x="465" y="210" />
+        <di:waypoint x="520" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="466" y="192" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Review_GatewayKeputusan_di" bpmnElement="Flow_Review_GatewayKeputusan">
+        <di:waypoint x="650" y="210" />
+        <di:waypoint x="705" y="210" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Disetujui_di" bpmnElement="Flow_Disetujui">
+        <di:waypoint x="755" y="210" />
+        <di:waypoint x="820" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="766" y="192" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Ditolak_di" bpmnElement="Flow_Ditolak">
+        <di:waypoint x="730" y="235" />
+        <di:waypoint x="730" y="340" />
+        <di:waypoint x="820" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="743" y="318" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_NotifSetuju_End_di" bpmnElement="Flow_NotifSetuju_End">
+        <di:waypoint x="960" y="210" />
+        <di:waypoint x="1022" y="210" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_NotifTolak_End_di" bpmnElement="Flow_NotifTolak_End">
+        <di:waypoint x="960" y="340" />
+        <di:waypoint x="1022" y="340" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
