@@ -204,7 +204,7 @@ Alasan Penolakan    : Ditolak: Beban kuartal akhir sangat tinggi
 
 ---
 
-## BAB V: Prinsip ABC (Bobot 7.5%)
+## BAB V: Prinsip ABC 
 
 Laporan ini ditulis pakai prinsip ABC:
 
@@ -214,7 +214,7 @@ Laporan ini ditulis pakai prinsip ABC:
 
 ---
 
-## BAB VI: Git & GitHub (Bobot 15%)
+## BAB VI: Git & GitHub
 
 ### 6.1 Repository
 
